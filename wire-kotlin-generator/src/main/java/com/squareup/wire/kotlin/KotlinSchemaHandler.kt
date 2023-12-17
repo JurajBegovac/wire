@@ -74,6 +74,9 @@ class KotlinSchemaHandler(
    * instantiable via their builders, regardless of the value of [javaInterop].
    */
   private val buildersOnly: Boolean = false,
+
+  /** Add special UNRECOGNIZED(-1) value for enums */
+  private val addProto3SpecialEnum: Boolean = false,
 ) : SchemaHandler() {
   private lateinit var kotlinGenerator: KotlinGenerator
 
@@ -94,6 +97,7 @@ class KotlinSchemaHandler(
       nameSuffix = nameSuffix,
       buildersOnly = buildersOnly,
       singleMethodServices = singleMethodServices,
+      addProto3SpecialEnum = addProto3SpecialEnum,
     )
     context.fileSystem.createDirectories(context.outDirectory)
     super.handle(schema, context)

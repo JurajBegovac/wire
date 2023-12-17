@@ -1813,6 +1813,78 @@ class KotlinGeneratorTest {
     )
   }
 
+  @Test fun withoutSpecialProto3Enum() {
+    val schema = buildSchema {
+      add(
+        "proto_package/person.proto".toPath(),
+        """
+         |package proto_package;
+         |enum Direction {
+         |  NORTH = 0;
+         |  EAST = 1;
+         |  SOUTH = 2;
+         |  WEST = 3;
+         |}
+         |
+        """.trimMargin(),
+      )
+    }
+    val code = KotlinWithProfilesGenerator(schema)
+      .generateKotlin("proto_package.Direction", addProto3SpecialEnum = false)
+    assertThat(code).doesNotContain(
+      """UNRECOGNIZED(-1),
+      """.trimMargin(),
+    )
+    assertThat(code).contains(
+      """
+      |    @JvmStatic
+      |    public fun fromValue(`value`: Int): Direction? = when (value) {
+      |      0 -> NORTH
+      |      1 -> EAST
+      |      2 -> SOUTH
+      |      3 -> WEST
+      |      else -> null
+      |    }
+      """.trimMargin(),
+    )
+  }
+
+  @Test fun specialProto3Enum() {
+    val schema = buildSchema {
+      add(
+        "proto_package/person.proto".toPath(),
+        """
+         |package proto_package;
+         |enum Direction {
+         |  NORTH = 0;
+         |  EAST = 1;
+         |  SOUTH = 2;
+         |  WEST = 3;
+         |}
+         |
+        """.trimMargin(),
+      )
+    }
+    val code = KotlinWithProfilesGenerator(schema)
+      .generateKotlin("proto_package.Direction", addProto3SpecialEnum = true)
+    assertThat(code).contains(
+      """UNRECOGNIZED(-1),
+      """.trimMargin(),
+    )
+    assertThat(code).contains(
+      """
+      |    @JvmStatic
+      |    public fun fromValue(`value`: Int): Direction = when (value) {
+      |      0 -> NORTH
+      |      1 -> EAST
+      |      2 -> SOUTH
+      |      3 -> WEST
+      |      else -> UNRECOGNIZED
+      |    }
+      """.trimMargin(),
+    )
+  }
+
   @Test fun deprecatedEnumConstant() {
     val schema = buildSchema {
       add(

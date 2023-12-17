@@ -131,6 +131,8 @@ data class KotlinTarget(
    * instantiable via their builders, regardless of the value of [javaInterop].
    */
   val buildersOnly: Boolean = false,
+
+  val addProto3SpecialEnum: Boolean = false,
 ) : Target() {
   override fun newHandler(): SchemaHandler {
     return KotlinSchemaHandler(
@@ -146,6 +148,7 @@ data class KotlinTarget(
       grpcServerCompatible = grpcServerCompatible,
       nameSuffix = nameSuffix,
       buildersOnly = buildersOnly,
+      addProto3SpecialEnum = addProto3SpecialEnum,
     )
   }
 

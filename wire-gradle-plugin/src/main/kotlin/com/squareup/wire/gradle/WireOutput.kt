@@ -84,6 +84,7 @@ open class KotlinOutput @Inject constructor() : WireOutput() {
   var grpcServerCompatible: Boolean = false
   var nameSuffix: String? = null
   var buildersOnly: Boolean = false
+  var addProto3SpecialEnum: Boolean = false
 
   override fun toTarget(outputDirectory: String): KotlinTarget {
     val rpcCallStyle = RpcCallStyle.values()
@@ -113,6 +114,7 @@ open class KotlinOutput @Inject constructor() : WireOutput() {
       grpcServerCompatible = grpcServerCompatible,
       nameSuffix = nameSuffix,
       buildersOnly = buildersOnly,
+      addProto3SpecialEnum = addProto3SpecialEnum,
     )
   }
 }

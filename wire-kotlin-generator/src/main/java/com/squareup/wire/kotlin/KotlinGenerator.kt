@@ -131,6 +131,7 @@ class KotlinGenerator private constructor(
   private val nameSuffix: String?,
   private val buildersOnly: Boolean,
   private val singleMethodServices: Boolean,
+  private val addProto3SpecialEnum: Boolean,
 ) {
   private val nameAllocatorStore = mutableMapOf<Type, NameAllocator>()
 
@@ -2296,6 +2297,15 @@ class KotlinGenerator private constructor(
       )
     }
 
+    if (addProto3SpecialEnum) {
+      builder.addEnumConstant(
+        name = getProto3SpecialEnumName(),
+        typeSpec = TypeSpec.anonymousClassBuilder()
+          .addSuperclassConstructorParameter("%L", -1)
+          .build()
+      )
+    }
+
     return builder.primaryConstructor(primaryConstructor.build())
       .build()
   }
@@ -2310,6 +2320,11 @@ class KotlinGenerator private constructor(
     }
     return CodeBlock.of(format, fieldName, field.identityValue)
   }
+
+  private fun getProto3SpecialEnumName(): String {
+    return "UNRECOGNIZED"
+  }
+
   private fun generateEnumCompanion(message: EnumType): TypeSpec {
     val nameAllocator = nameAllocator(message)
     val companionObjectBuilder = TypeSpec.companionObjectBuilder()
@@ -2318,7 +2333,7 @@ class KotlinGenerator private constructor(
     val fromValue = FunSpec.builder("fromValue")
       .addAnnotation(ClassName("com.squareup.wire.internal", "JvmStatic"))
       .addParameter(valueName, Int::class)
-      .returns(parentClassName.copy(nullable = true))
+      .returns(parentClassName.copy(nullable = !addProto3SpecialEnum))
       .apply {
         addCode("return when (value) {\n⇥")
         message.constants.forEach { constant ->
@@ -2326,7 +2341,11 @@ class KotlinGenerator private constructor(
           if (constant.isDeprecated) addCode("@Suppress(\"DEPRECATION\") ")
           addCode("%L\n", nameAllocator[constant])
         }
-        addCode("else -> null")
+        if (addProto3SpecialEnum) {
+          addCode("else -> ${getProto3SpecialEnumName()}")
+        } else {
+          addCode("else -> null")
+        }
         addCode("\n⇤}\n") // close the block
       }
       .build()
@@ -2365,7 +2384,7 @@ class KotlinGenerator private constructor(
         FunSpec.builder("fromValue")
           .addModifiers(OVERRIDE)
           .addParameter(valueName, Int::class)
-          .returns(parentClassName.copy(nullable = true))
+          .returns(parentClassName.copy(nullable = !addProto3SpecialEnum))
           .addStatement("return %T.fromValue(value)", parentClassName)
           .build(),
       )
@@ -2902,6 +2921,7 @@ class KotlinGenerator private constructor(
       nameSuffix: String? = null,
       buildersOnly: Boolean = false,
       singleMethodServices: Boolean = false,
+      addProto3SpecialEnum: Boolean = false,
     ): KotlinGenerator {
       val typeToKotlinName = mutableMapOf<ProtoType, TypeName>()
       val memberToKotlinName = mutableMapOf<ProtoMember, TypeName>()
@@ -2951,6 +2971,7 @@ class KotlinGenerator private constructor(
         nameSuffix = nameSuffix,
         buildersOnly = buildersOnly,
         singleMethodServices = singleMethodServices,
+        addProto3SpecialEnum = addProto3SpecialEnum,
       )
     }
 

@@ -15,6 +15,7 @@ plugins {
 // We only want to publish when it's being built in the root project.
 if (project.rootProject.name == "wire") {
   apply(plugin = "com.gradle.plugin-publish")
+  apply(plugin = "maven-publish") // just so I can test it with jitpack
 }
 
 gradlePlugin {
